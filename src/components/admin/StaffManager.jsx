@@ -253,11 +253,11 @@ const StaffManager = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Company Email</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Company Email (Optional)</label>
                 <input 
-                  required type="email" value={formState.email} onChange={e => setFormState({...formState, email: e.target.value})}
+                  type="email" value={formState.email} onChange={e => setFormState({...formState, email: e.target.value})}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 lowercase" 
-                  placeholder="name@vnrvjiet.in"
+                  placeholder="Optional"
                 />
               </div>
               <div>

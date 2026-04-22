@@ -81,7 +81,7 @@ export const addStaff = async (staffData) => {
   const { error } = await supabase.from('staff').insert({
     employee_id: staffData.employeeId,
     name: staffData.name,
-    email: staffData.email,
+    email: staffData.email ? staffData.email : null,
     password: 'vnrvjiet',
     department: staffData.department,
     workplace_id: staffData.workplaceId,
@@ -112,7 +112,7 @@ export const updateStaff = async (staffId, updates) => {
   const payload = {};
   if (updates.employeeId !== undefined) payload.employee_id = updates.employeeId;
   if (updates.name !== undefined) payload.name = updates.name;
-  if (updates.email !== undefined) payload.email = updates.email;
+  if (updates.email !== undefined) payload.email = updates.email ? updates.email : null;
   if (updates.password !== undefined) payload.password = updates.password;
   if (updates.department !== undefined) payload.department = updates.department;
   if (updates.workplaceId !== undefined) payload.workplace_id = updates.workplaceId;

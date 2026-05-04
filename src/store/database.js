@@ -62,13 +62,60 @@ export const updateWorkplace = async (workplaceId, updates) => {
 };
 
 // --- Staff ---
-export const getStaff = async () => {
-  const { data, error } = await supabase.from('staff').select('*');
-  if (error) {
-    console.error('Error fetching staff:', error);
-    return [];
+// Optimized for Dashboard to prevent timeouts from fetching massive base64 payloads
+export const getStaffStats = async () => {
+  const { count: totalStaff, error: err1 } = await supabase
+    .from('staff')
+    .select('*', { count: 'exact', head: true });
+    
+  const { count: photosUploaded, error: err2 } = await supabase
+    .from('staff')
+    .select('*', { count: 'exact', head: true })
+    .not('photo_base64', 'is', null);
+
+  if (err1) console.error('Error fetching total staff count:', err1);
+  if (err2) console.error('Error fetching photo upload count:', err2);
+
+  return {
+    totalStaff: totalStaff || 0,
+    photosUploaded: photosUploaded || 0
+  };
+};
+
+// NEW: Server-side pagination to fix the 500 Timeout Error
+export const getPaginatedStaff = async (page = 1, limit = 20, searchQuery = '', department = '') => {
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = supabase
+    .from('staff')
+    .select('*', { count: 'exact' });
+
+  // Apply search filter directly in the database
+  if (searchQuery) {
+    query = query.or(`name.ilike.%${searchQuery}%,employee_id.ilike.%${searchQuery}%`);
   }
-  return data.map(mapStaff);
+
+  // Apply department filter directly in the database
+  if (department) {
+    query = query.eq('department', department);
+  }
+
+  // Order by name so the list stays consistent across pages and avoids created_at missing column errors
+  query = query.order('name', { ascending: true });
+
+  // Fetch only the specific range of rows needed
+  const { data, count, error } = await query.range(from, to);
+
+  if (error) {
+    console.error('Error fetching paginated staff:', error);
+    return { data: [], count: 0 };
+  }
+
+  return {
+    data: data.map(mapStaff),
+    count
+  };
 };
 
 export const addStaff = async (staffData) => {
@@ -119,8 +166,8 @@ export const updateStaff = async (staffId, updates) => {
   if (updates.role !== undefined) payload.role = updates.role;
   if (updates.photoBase64 !== undefined) payload.photo_base64 = updates.photoBase64;
   if (updates.faceDescriptor !== undefined) {
-    payload.face_descriptor = updates.faceDescriptor instanceof Float32Array 
-      ? Array.from(updates.faceDescriptor) 
+    payload.face_descriptor = updates.faceDescriptor instanceof Float32Array
+      ? Array.from(updates.faceDescriptor)
       : updates.faceDescriptor;
   }
 
@@ -157,13 +204,13 @@ export const getStaffAttendanceToday = async (staffId) => {
 export const markAttendance = async (staffId, slot) => {
   const today = new Date().toISOString().split('T')[0];
   const now = new Date().toISOString();
-  
+
   const { data: record } = await supabase.from('attendance')
     .select('*')
     .eq('staff_id', staffId)
     .eq('date', today)
     .single();
-    
+
   if (record) {
     const { error } = await supabase.from('attendance')
       .update({ [slot]: now })
@@ -181,7 +228,7 @@ export const getAttendanceHistory = async (staffId, days = 30) => {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().split('T')[0];
-  
+
   const { data, error } = await supabase.from('attendance')
     .select('*')
     .eq('staff_id', staffId)
@@ -201,22 +248,22 @@ export const updateAttendanceRecord = async (staffId, date, updates) => {
     .eq('staff_id', staffId)
     .eq('date', date)
     .single();
-    
+
   if (record) {
     const payload = {};
     if (updates.morning !== undefined) payload.morning = updates.morning;
     if (updates.evening !== undefined) payload.evening = updates.evening;
-    
+
     const { error } = await supabase.from('attendance')
       .update(payload)
       .eq('id', record.id);
     if (error) console.error('Error updating attendance record:', error);
   } else {
-    const payload = { 
-      staff_id: staffId, 
-      date: date, 
-      morning: updates.morning || null, 
-      evening: updates.evening || null 
+    const payload = {
+      staff_id: staffId,
+      date: date,
+      morning: updates.morning || null,
+      evening: updates.evening || null
     };
     const { error } = await supabase.from('attendance').insert(payload);
     if (error) console.error('Error inserting attendance record:', error);
@@ -228,7 +275,7 @@ export const getTodaysAttendanceCount = async () => {
   const { data, error } = await supabase.from('attendance')
     .select('id, morning, evening')
     .eq('date', today);
-  
+
   if (error) {
     console.error('Error fetching today attendance count:', error);
     return 0;
@@ -241,7 +288,7 @@ export const getTodaysAttendanceRecords = async () => {
   const { data, error } = await supabase.from('attendance')
     .select('staff_id, morning, evening')
     .eq('date', today);
-  
+
   if (error) {
     console.error('Error fetching today attendance logs:', error);
     return [];

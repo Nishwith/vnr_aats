@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getStaff, getWorkplaces, getTodaysAttendanceCount } from '../../store/database';
+import { getStaffStats, getWorkplaces, getTodaysAttendanceCount } from '../../store/database';
 import { Users, Building2, CheckCircle2, Clock } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -7,15 +7,15 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const staffMembers = await getStaff();
+      const { totalStaff, photosUploaded } = await getStaffStats();
       const todayAttendanceCount = await getTodaysAttendanceCount();
       
-      const absents = staffMembers.length - todayAttendanceCount;
-      const percentage = staffMembers.length > 0 ? Math.round((todayAttendanceCount / staffMembers.length) * 100) : 0;
+      const absents = totalStaff - todayAttendanceCount;
+      const percentage = totalStaff > 0 ? Math.round((todayAttendanceCount / totalStaff) * 100) : 0;
 
       setStats({
-        totalStaff: staffMembers.length,
-        photosUploaded: staffMembers.filter(s => s.photoBase64).length,
+        totalStaff: totalStaff,
+        photosUploaded: photosUploaded,
         todaysAttendance: todayAttendanceCount,
         absentsToday: absents < 0 ? 0 : absents,
         todaysPercentage: percentage

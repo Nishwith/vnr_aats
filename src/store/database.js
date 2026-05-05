@@ -89,7 +89,7 @@ export const getPaginatedStaff = async (page = 1, limit = 20, searchQuery = '', 
 
   let query = supabase
     .from('staff')
-    .select('*', { count: 'exact' });
+    .select('id, employee_id, name, email, department, role, workplace_id, created_at, photo_base64', { count: 'exact' });
 
   // Apply search filter directly in the database
   if (searchQuery) {
@@ -300,6 +300,26 @@ export const getAllAttendanceLogs = async () => {
   const { data, error } = await supabase.from('attendance').select('staff_id, date, morning, evening');
   if (error) return [];
   return data;
+};
+
+// --- Storage ---
+export const uploadStaffPhoto = async (file, staffId) => {
+  const fileExt = file.name ? file.name.split('.').pop() : 'jpg';
+  const fileName = `${staffId}_${Date.now()}.${fileExt}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from('staff-photos')
+    .upload(fileName, file);
+
+  if (uploadError) {
+    throw uploadError;
+  }
+
+  const { data } = supabase.storage
+    .from('staff-photos')
+    .getPublicUrl(fileName);
+
+  return data.publicUrl;
 };
 
 // --- Mappers ---

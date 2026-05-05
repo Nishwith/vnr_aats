@@ -109,8 +109,9 @@ const StaffDashboard = ({ adminEmbed = false }) => {
 
     setFaceStatus(prev => ({ ...prev, message: 'Processing your reference photo...'}));
     
-    // Extract descriptor from saved base64 image (since mockDB doesn't persist Float32Arrays well)
+    // Extract descriptor from saved public URL
     const img = new Image();
+    img.crossOrigin = "anonymous"; // CRITICAL for fetching external Supabase Storage URLs into canvas
     img.src = staff.photoBase64;
     await new Promise(r => { img.onload = r });
     const descriptor = await getFaceDescriptorFromImage(img);

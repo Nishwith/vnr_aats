@@ -9,8 +9,8 @@ import {
   updateAttendanceRecord,
   getTodaysAttendanceRecords,
   getAllAttendanceLogs,
-} from "../../store/database";
-import {
+  uploadStaffPhoto,
+} from "../../store/database";import {
   UserPlus,
   Image as ImageIcon,
   Camera,
@@ -213,15 +213,17 @@ const StaffManager = () => {
     closeForm();
   };
 
-  const handlePhotoUpload = (e, staffId) => {
+  const handlePhotoUpload = async (e, staffId) => {
     const file = e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        await updateStaff(staffId, { photoBase64: reader.result });
+      try {
+        const publicUrl = await uploadStaffPhoto(file, staffId);
+        await updateStaff(staffId, { photoBase64: publicUrl });
         await refreshData();
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error("Error uploading image to storage:", err);
+        alert("Failed to upload image. Make sure 'staff-photos' public bucket exists in Supabase.");
+      }
     }
   };
 

@@ -4,7 +4,6 @@ import { Users, Building2, CheckCircle2, Clock } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({ totalStaff: 0, photosUploaded: 0, todaysAttendance: 0, absentsToday: 0, todaysPercentage: 0 });
-
   useEffect(() => {
     const fetchStats = async () => {
       const { totalStaff, photosUploaded } = await getStaffStats();
@@ -23,6 +22,8 @@ const AdminDashboard = () => {
     };
     fetchStats();
   }, []);
+
+
 
   return (
     <div className="space-y-6">

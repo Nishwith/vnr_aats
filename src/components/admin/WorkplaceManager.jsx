@@ -85,7 +85,34 @@ const WorkplaceManager = () => {
         <form onSubmit={handleSave} className="space-y-8">
           {/* General Info */}
           <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2"><MapPin className="text-blue-500" size={18}/> Location Details</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                <MapPin className="text-blue-500" size={18}/> Location Details
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                      (position) => {
+                        setWorkplace(prev => ({
+                          ...prev,
+                          latitude: position.coords.latitude.toFixed(6),
+                          longitude: position.coords.longitude.toFixed(6)
+                        }));
+                      },
+                      (error) => alert("Error getting location: " + error.message),
+                      { enableHighAccuracy: true }
+                    );
+                  } else {
+                    alert("Geolocation is not supported by this browser.");
+                  }
+                }}
+                className="text-xs font-bold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1"
+              >
+                <MapPin size={14} /> Get My Location
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Workplace Name</label>

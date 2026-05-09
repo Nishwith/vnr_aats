@@ -64,24 +64,8 @@ export const isAttendanceAllowed = (attendanceRecord, timeConfig) => {
     if (attendanceRecord && attendanceRecord.evening) {
       return { allowed: false, reason: 'Evening attendance already marked today.' };
     }
-
-    // Check if morning was marked at all
-    if (!attendanceRecord || !attendanceRecord.morning) {
-      return { allowed: false, reason: 'Morning attendance must be marked before evening attendance.' };
-    }
-
-    // Check gap
-    const morningPunch = new Date(attendanceRecord.morning);
-    const now = new Date();
-    const diffHours = (now.getTime() - morningPunch.getTime()) / (1000 * 60 * 60);
-
-    if (diffHours < timeConfig.minGapHours) {
-      return { 
-        allowed: false, 
-        reason: `A minimum gap of ${timeConfig.minGapHours} hours is required. You marked morning at ${morningPunch.toLocaleTimeString()}. Try again later.` 
-      };
-    }
-
+    
+    // We no longer require morning attendance or a gap to mark evening attendance
     return { allowed: true, slot: SLOT_EVENING };
   }
 
